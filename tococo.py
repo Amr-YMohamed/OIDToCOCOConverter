@@ -46,7 +46,7 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
 def getclassCols (ann_path, description_path, rotation_path, sizes_path, className):
 
     chunk = pd.read_csv(description_path, header=None)
-    chunk = chunk.loc[(chunk.iloc[:,1]).str.lower() == className]
+    chunk = chunk.loc[(chunk.iloc[:,1]).str.lower() == className.lower()]
     print(chunk)
 
     print("loading bunch of classes for processing based on chunkSize...")
@@ -81,7 +81,7 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
     sizes = sizes[boolCond.values]   
 
-    yield annFile, chunk, sizes, rotations, sizes
+    return annFile, chunk, sizes, rotations, sizes
 
 def addClassDesc(desc):
     classes = []
