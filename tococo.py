@@ -29,7 +29,7 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
         #reading the dataframe that corresponds to the classes, cols of concern
         rotations = pd.read_csv(rotation_path, usecols = cols)
         img_ids = rotations.ImageID.to_numpy()
-        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs))
+        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
         rotations = rotations[boolCond.values]   
         
         print("fetching sizes from its file...")
@@ -38,7 +38,7 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
         #reading the dataframe that corresponds to the classes, cols of concern
         sizes = pd.read_csv(sizes_path, usecols = cols)
         img_ids = sizes.image_id.to_numpy()
-        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs))
+        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
         sizes = sizes[boolCond.values]   
 
         yield annFile, chunk, sizes, rotations, sizes
@@ -69,7 +69,7 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     #reading the dataframe that corresponds to the classes, cols of concern
     rotations = pd.read_csv(rotation_path, usecols = cols)
     img_ids = rotations.ImageID.to_numpy()
-    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs))
+    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
     rotations = rotations[boolCond.values]   
     
     print("fetching sizes from its file...")
@@ -78,7 +78,7 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     #reading the dataframe that corresponds to the classes, cols of concern
     sizes = pd.read_csv(sizes_path, usecols = cols)
     img_ids = sizes.image_id.to_numpy()
-    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs))
+    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
     sizes = sizes[boolCond.values]   
 
     yield annFile, chunk, sizes, rotations, sizes
@@ -182,7 +182,6 @@ def convertSingleClass(ann_path, description_path, rotation_path, sizes_path, cl
 
     oi = {}
     writeCommon(oi)
-    ind = 1
     ann, desc, sizes, rotations, sizes  = getclassCols (ann_path, description_path, rotation_path, sizes_path, className)
 
     # Convert category information
@@ -198,10 +197,9 @@ def convertSingleClass(ann_path, description_path, rotation_path, sizes_path, cl
     print('converting annotations ...')
     oi['annotations'] = addAnnotations(ann, oi['images'], oi['categories'])
 
-    filename = str(ind) + ".json"
+    filename = str(className) + ".json"
     print('writing output to {}'.format(filename))
     json.dump(oi,  open(filename, "w"))
-    ind = ind + 1
 
 
 def writeCommon(oi):
