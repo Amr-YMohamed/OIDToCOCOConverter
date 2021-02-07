@@ -5,7 +5,7 @@ python script converts open image dataset to coco format.
 
 ### Plugins
 
-Dillinger is currently extended with the following plugins. Instructions on how to use them in your own application are linked below.
+The following parameters needs to be passed to the script to run.
 
 | parameter | meaning |
 | ------ | ------ |
