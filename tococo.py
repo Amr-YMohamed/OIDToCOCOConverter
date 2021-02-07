@@ -21,7 +21,9 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
         labelNames = annFile.LabelName.to_numpy()
         boolCond = pd.Series(np.in1d(labelNames, classLabels))
         annFile = annFile[boolCond.values]
-        chunk_imgs = annFile.ImageID.to_numpy()
+        chunk_imgs = np.unique(annFile.ImageID.to_numpy())
+        
+
 
         print("fetching rotations from its file...")
         #column names of concern from rotation file
@@ -29,8 +31,8 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
         #reading the dataframe that corresponds to the classes, cols of concern
         rotations = pd.read_csv(rotation_path, usecols = cols)
         img_ids = rotations.ImageID.to_numpy()
-        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
-        rotations = rotations[boolCond.values]   
+        rotations = rotations.loc[rotations['ImageID'].isin(chunk_imgs)]
+
         
         print("fetching sizes from its file...")
         #column names of concern from rotation file
@@ -38,8 +40,8 @@ def getReqCols (ann_path, description_path, rotation_path, sizes_path, chunksize
         #reading the dataframe that corresponds to the classes, cols of concern
         sizes = pd.read_csv(sizes_path, usecols = cols)
         img_ids = sizes.image_id.to_numpy()
-        boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
-        sizes = sizes[boolCond.values]   
+        sizes = sizes.loc[sizes['image_id'].isin(chunk_imgs)]
+
 
         yield annFile, chunk, sizes, rotations, sizes
 
@@ -49,7 +51,7 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     chunk = chunk.loc[(chunk.iloc[:,1]).str.lower() == className.lower()]
     print(chunk)
 
-    print("loading bunch of classes for processing based on chunkSize...")
+    print("loading {} class data".format(className))
     classLabels = chunk.iloc[:,0].to_numpy() #classcodes
     
     print("fetching annotations from its file...")
@@ -61,7 +63,7 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     labelNames = annFile.LabelName.to_numpy()
     boolCond = pd.Series(np.in1d(labelNames, classLabels))
     annFile = annFile[boolCond.values]
-    chunk_imgs = annFile.ImageID.to_numpy()
+    chunk_imgs = np.unique(annFile.ImageID.to_numpy())
 
     print("fetching rotations from its file...")
     #column names of concern from rotation file
@@ -69,8 +71,8 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     #reading the dataframe that corresponds to the classes, cols of concern
     rotations = pd.read_csv(rotation_path, usecols = cols)
     img_ids = rotations.ImageID.to_numpy()
-    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
-    rotations = rotations[boolCond.values]   
+    rotations = rotations.loc[rotations['ImageID'].isin(chunk_imgs)]
+ 
     
     print("fetching sizes from its file...")
     #column names of concern from rotation file
@@ -78,8 +80,8 @@ def getclassCols (ann_path, description_path, rotation_path, sizes_path, classNa
     #reading the dataframe that corresponds to the classes, cols of concern
     sizes = pd.read_csv(sizes_path, usecols = cols)
     img_ids = sizes.image_id.to_numpy()
-    boolCond = pd.Series(np.in1d(img_ids, chunk_imgs)) #bottleneck needs improving
-    sizes = sizes[boolCond.values]   
+    sizes = sizes.loc[sizes['image_id'].isin(chunk_imgs)]
+
 
     return annFile, chunk, sizes, rotations, sizes
 
@@ -122,13 +124,11 @@ def addAnnotations(annotations, imageData, classMapping):
     imgs = {img['id']: img for img in imageData}
     classMapping = {clas['freebase_id']: clas for clas in classMapping}
 
-    #num_instances = len(original_annotations_dict)
     for index, imageID, labelName, XMin, XMax, YMin, YMax, IsOccluded, IsTruncated, IsGroupOf, IsDepiction, IsInside in zip(
         indicies, annotations.ImageID, annotations.LabelName, annotations.XMin, annotations.XMax, annotations.YMin, 
         annotations.YMax, annotations.IsOccluded, annotations.IsTruncated, annotations.IsGroupOf, annotations.IsDepiction, 
         annotations.IsInside):
-        # set individual instance id
-        # use start_index to separate indices between dataset splits
+
         ann = {}
         ann['id'] = index
         ann['image_id'] = imageID
@@ -255,8 +255,6 @@ if __name__ == '__main__':
         convertSingleClass(ann_path, description_path, rotation_path, sizes_path, className)
     else:
         converOID(ann_path, description_path, rotation_path, sizes_path, chunksize)
-
-    #getReqCols("oidv6-train-annotations-bbox.csv", "class-descriptions-boxable.csv", "")
 
     end = datetime.datetime.now()
     print("process time: %s" % (end-start))
